@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include <random>
 
 void automate(int datasetSize, std::string filename);
 
@@ -18,9 +19,7 @@ int writeDataset(std::vector<float> dataset, std::string filename, float avg, fl
 
 int main()
 {
-    srand(time(0));
     automate(1000, "test2.txt");
-
     return 0;
 }
 
@@ -66,10 +65,14 @@ std::vector<float> loadDataset(int dataSetSize, std::string filename)
 int createDataset(int size, std::string filename)
 {
     float *vec = new float[size];
+	std::random_device rd;
 
     for (int i = 0; i < size; i++)
     {
-        vec[i] = (rand() % 1000) / 10.f;
+		std::mt19937 rng(rd());
+		std::uniform_real_distribution<> num(0, 100);
+        vec[i] = num(rd);
+		//std::cout << vec[i] << std::endl;
     }
 
     std::fstream file(filename, std::ios::out);
