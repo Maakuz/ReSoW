@@ -64,7 +64,6 @@ std::vector<float> loadDataset(int dataSetSize, std::string filename)
 
 int createDataset(int size, std::string filename)
 {
-    float *vec = new float[size];
 	std::random_device rd;
     std::vector<float> vec;
 
@@ -72,9 +71,8 @@ int createDataset(int size, std::string filename)
     {
 		std::mt19937 rng(rd());
 		std::uniform_real_distribution<> num(0, 100);
-        vec[i] = num(rd);
 		//std::cout << vec[i] << std::endl;
-        vec.push_back((rand() % 1000) / 10.f);
+        vec.push_back(num(rd));
     }
 
     std::fstream file(filename, std::ios::out);
