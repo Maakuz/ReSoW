@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include <random>
+#include <chrono>
+
+#define NROFMEASUREPOINTS 5
 
 void automate(int datasetSize, std::string filename);
 
@@ -18,7 +21,7 @@ int writeDataset(std::vector<float> dataset, std::string filename, float avg, fl
 
 int main()
 {
-    automate(102400, "test2.txt");
+    automate(10240, "test2.txt");
     return 0;
 }
 
@@ -26,20 +29,51 @@ void automate(int datasetSize, std::string filename)
 {
     std::vector<float> dataset(0, 0);
 
+    std::string timeResult[NROFMEASUREPOINTS];
+
     createDataset(datasetSize, filename);
     dataset = loadDataset(datasetSize, filename);
 
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     float avg = findAvg(dataset);
+    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[0] = "Finding avg: " + std::to_string(time) + " microseconds\r\n";
 
+    t1 = std::chrono::high_resolution_clock::now();
     float min = findMin(dataset);
+    t2 = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[1] = "Finding min: " + std::to_string(time) + " microseconds\r\n";
 
+
+    t1 = std::chrono::high_resolution_clock::now();
     float max = findMax(dataset);
+    t2 = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[2] = "Finding max: " + std::to_string(time) + " microseconds\r\n";
 
+
+    t1 = std::chrono::high_resolution_clock::now();
     selectionSort(dataset);
+    t2 = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[3] = "Selection sort: " + std::to_string(time) + " microseconds\r\n";
 
+
+    t1 = std::chrono::high_resolution_clock::now();
     writeDataset(dataset, "sorted" + filename, avg, min, max);
+    t2 = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[4] = "Writing dataset to file: " + std::to_string(time) + " microseconds\r\n";
 
-    system("pause");
+
+    std::fstream datafile("measures" + filename, std::ios::out);
+    
+    for (int i = 0; i < NROFMEASUREPOINTS; i++)
+    {
+        datafile << timeResult[i];
+    }
 }
 
 std::vector<float> loadDataset(int dataSetSize, std::string filename)
