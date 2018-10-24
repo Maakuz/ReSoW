@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include <random>
 
 std::vector<float> loadDataset(int dataSetSize, std::string filename);
 int createDataset(int size, std::string filename);
@@ -12,7 +13,6 @@ float findMax(std::vector<float> dataset);
 
 int main()
 {
-    srand(time(0));
 
     int dataSetSize = 0;
     int bufferSize = 0;
@@ -59,10 +59,14 @@ std::vector<float> loadDataset(int dataSetSize, std::string filename)
 int createDataset(int size, std::string filename)
 {
     float *vec = new float[size];
+	std::random_device rd;
 
     for (int i = 0; i < size; i++)
     {
-        vec[i] = (rand() % 1000) / 10.f;
+		std::mt19937 rng(rd());
+		std::uniform_real_distribution<> num(0, 100);
+        vec[i] = num(rd);
+		//std::cout << vec[i] << std::endl;
     }
 
     std::fstream file(filename, std::ios::out);
