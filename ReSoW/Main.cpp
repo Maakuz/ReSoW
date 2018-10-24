@@ -2,7 +2,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <time.h>
 #include <random>
 
 void automate(int datasetSize, std::string filename);
