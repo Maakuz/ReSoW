@@ -65,11 +65,11 @@ std::vector<float> loadDataset(int dataSetSize, std::string filename)
 
 int createDataset(int size, std::string filename)
 {
-    float *vec = new float[size];
+    std::vector<float> vec;
 
     for (int i = 0; i < size; i++)
     {
-        vec[i] = (rand() % 1000) / 10.f;
+        vec.push_back((rand() % 1000) / 10.f);
     }
 
     std::fstream file(filename, std::ios::out);
