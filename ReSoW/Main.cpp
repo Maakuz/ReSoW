@@ -19,7 +19,7 @@ int writeDataset(std::vector<float> dataset, std::string filename, float avg, fl
 
 int main()
 {
-    automate(1000, "test2.txt");
+    automate(102400, "test2.txt");
     return 0;
 }
 
