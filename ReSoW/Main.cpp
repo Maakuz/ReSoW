@@ -5,36 +5,42 @@
 #include <time.h>
 #include <random>
 
+void automate(int datasetSize, std::string filename);
+
 std::vector<float> loadDataset(int dataSetSize, std::string filename);
 int createDataset(int size, std::string filename);
 float findAvg(std::vector<float> dataset);
 float findMin(std::vector<float> dataset);
 float findMax(std::vector<float> dataset);
 
+void selectionSort(std::vector<float>& dataset);
+int writeDataset(std::vector<float> dataset, std::string filename, float avg, float min, float max);
+
+
 int main()
 {
+    automate(1000, "test2.txt");
+    return 0;
+}
 
-    int dataSetSize = 0;
-    int bufferSize = 0;
-    std::string datasetFilename("");
-    std::string outputFilename("");
-
+void automate(int datasetSize, std::string filename)
+{
     std::vector<float> dataset(0, 0);
 
-    createDataset(1000, "test.txt");
-    dataset = loadDataset(1000, "test.txt");
+    createDataset(datasetSize, filename);
+    dataset = loadDataset(datasetSize, filename);
 
     float avg = findAvg(dataset);
-    std::cout << "avg: " << avg << std::endl;
 
     float min = findMin(dataset);
-    std::cout << "min: " << min << std::endl;
 
     float max = findMax(dataset);
-    std::cout << "max: " << max << std::endl;
+
+    selectionSort(dataset);
+
+    writeDataset(dataset, "sorted" + filename, avg, min, max);
 
     system("pause");
-    return 0;
 }
 
 std::vector<float> loadDataset(int dataSetSize, std::string filename)
@@ -111,4 +117,45 @@ float findMax(std::vector<float> dataset)
             max = i;
     }
     return dataset[max];
+}
+
+void selectionSort(std::vector<float>& dataset)
+{
+    int min = 0;
+    for (int i = 0; i < dataset.size() - 1; i++)
+    {
+        bool minfound = false;
+        
+        min = i;
+        for (int j = i + 1; j < dataset.size(); j++)
+        {
+            
+            if (dataset[j] < dataset[min])
+            {
+                min = j;
+                minfound = true;
+            }
+        }
+
+        if (minfound)
+            std::swap(dataset[i], dataset[min]);
+    }
+}
+
+int writeDataset(std::vector<float> dataset, std::string filename, float avg, float min, float max)
+{
+    std::fstream file(filename, std::ios::out);
+
+    if (!file.is_open())
+        return -1;
+
+    file << avg << " " << min << " " << max << " ";
+
+    for (size_t i = 0; i < dataset.size(); i++)
+    {
+        file << dataset[i] << " ";
+    }
+
+
+    return 0;
 }
