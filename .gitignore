@@ -259,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/ReSoW/2 - 2048 buffersize 100 000 datasize
+/ReSoW/10240
+/ReSoW/10 -1 000 000 datasize 256 buffersize

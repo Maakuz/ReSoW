@@ -5,67 +5,91 @@
 #include <random>
 #include <chrono>
 
-#define NROFMEASUREPOINTS 5
+#define NROFMEASUREPOINTS 6
+#define USEQUICKSORT true
 
-void automate(int datasetSize, std::string filename);
+void automate(int datasetSize, int bufferSize, std::string filename);
 
-std::vector<float> loadDataset(int dataSetSize, std::string filename);
+std::vector<float> loadDataset(int dataSetSize, int bufferSize, std::string filename);
 int createDataset(int size, std::string filename);
 float findAvg(std::vector<float> dataset);
 float findMin(std::vector<float> dataset);
 float findMax(std::vector<float> dataset);
 
 void selectionSort(std::vector<float>& dataset);
-int writeDataset(std::vector<float> dataset, std::string filename, float avg, float min, float max);
+int writeDataset(std::vector<float> dataset, int bufferSize, std::string filename, float avg, float min, float max);
 
 
 int main()
 {
-    automate(10240, "test2.txt");
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+    for (int i = 0; i < 10; i++)
+    {
+        std::cout << 4 * pow(2, i) << std::endl;
+        automate(100000, 4 * pow(2, i), "test" + std::to_string(i) + ".txt");
+    }
+
+    /*for (int i = 0; i < 6; i++)
+    {
+        std::cout << 10 * pow(10, i) << std::endl;
+        automate(10 * pow(10, i), 256, "testOPT_Q" + std::to_string(i) + ".txt");
+    }*/
+    system("pause");
     return 0;
+    
 }
 
-void automate(int datasetSize, std::string filename)
+void automate(int datasetSize, int bufferSize, std::string filename)
 {
     std::vector<float> dataset(0, 0);
 
     std::string timeResult[NROFMEASUREPOINTS];
 
     createDataset(datasetSize, filename);
-    dataset = loadDataset(datasetSize, filename);
 
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-    float avg = findAvg(dataset);
+    dataset = loadDataset(datasetSize, bufferSize, filename);
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     auto time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    timeResult[0] = "Finding avg: " + std::to_string(time) + " microseconds\r\n";
+    timeResult[5] = std::to_string(time) + "                       microseconds reading from file\n";
+    
+    t1 = std::chrono::high_resolution_clock::now();
+    float avg = findAvg(dataset);
+    t2 = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    timeResult[0] = std::to_string(time) + "                       finding avg: microseconds\n";
 
     t1 = std::chrono::high_resolution_clock::now();
     float min = findMin(dataset);
     t2 = std::chrono::high_resolution_clock::now();
     time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    timeResult[1] = "Finding min: " + std::to_string(time) + " microseconds\r\n";
+    timeResult[1] = std::to_string(time) + "                       finding min: microseconds\n";
 
 
     t1 = std::chrono::high_resolution_clock::now();
     float max = findMax(dataset);
     t2 = std::chrono::high_resolution_clock::now();
     time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    timeResult[2] = "Finding max: " + std::to_string(time) + " microseconds\r\n";
+    timeResult[2] = std::to_string(time) + "                       finding max: microseconds\n";
 
 
     t1 = std::chrono::high_resolution_clock::now();
+#if USEQUICKSORT
+    std::sort(dataset.begin(), dataset.end());
+#else
     selectionSort(dataset);
+#endif
     t2 = std::chrono::high_resolution_clock::now();
     time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    timeResult[3] = "Selection sort: " + std::to_string(time) + " microseconds\r\n";
+    timeResult[3] =std::to_string(time) + "                       microseconds sorting\n";
 
 
     t1 = std::chrono::high_resolution_clock::now();
-    writeDataset(dataset, "sorted" + filename, avg, min, max);
+    writeDataset(dataset, bufferSize, "sorted" + filename, avg, min, max);
     t2 = std::chrono::high_resolution_clock::now();
     time = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    timeResult[4] = "Writing dataset to file: " + std::to_string(time) + " microseconds\r\n";
+    timeResult[4] = std::to_string(time) + "                       microseconds writing\n";
 
 
     std::fstream datafile("measures" + filename, std::ios::out);
@@ -76,10 +100,15 @@ void automate(int datasetSize, std::string filename)
     }
 }
 
-std::vector<float> loadDataset(int dataSetSize, std::string filename)
+std::vector<float> loadDataset(int dataSetSize, int bufferSize, std::string filename)
 {
-    std::fstream file(filename, std::ios::in);
+    std::fstream file;
     std::vector<float> dataset(0, 0);
+
+    std::vector<char> buf(bufferSize, 0);
+   
+    file.open(filename, std::ios::in);
+    file.rdbuf()->pubsetbuf(buf.data(), bufferSize);
 
     float temp = 0;
     if (file.is_open())
@@ -90,8 +119,7 @@ std::vector<float> loadDataset(int dataSetSize, std::string filename)
             dataset.push_back(temp);
         }
     }
-    
-
+   
     return dataset;
 }
 
@@ -155,12 +183,12 @@ float findMax(std::vector<float> dataset)
 void selectionSort(std::vector<float>& dataset)
 {
     int min = 0;
-    for (int i = 0; i < dataset.size() - 1; i++)
+    for (size_t i = 0; i < dataset.size() - 1; i++)
     {
         bool minfound = false;
         
         min = i;
-        for (int j = i + 1; j < dataset.size(); j++)
+        for (size_t j = i + 1; j < dataset.size(); j++)
         {
             
             if (dataset[j] < dataset[min])
@@ -175,12 +203,18 @@ void selectionSort(std::vector<float>& dataset)
     }
 }
 
-int writeDataset(std::vector<float> dataset, std::string filename, float avg, float min, float max)
+int writeDataset(std::vector<float> dataset, int bufferSize, std::string filename, float avg, float min, float max)
 {
-    std::fstream file(filename, std::ios::out);
+    std::fstream file;
+
+    std::vector<char> buf(bufferSize, 0);
+
+    file.open(filename, std::ios::out);
+    file.rdbuf()->pubsetbuf(buf.data(), bufferSize);
 
     if (!file.is_open())
         return -1;
+
 
     file << avg << " " << min << " " << max << " ";
 
@@ -188,7 +222,6 @@ int writeDataset(std::vector<float> dataset, std::string filename, float avg, fl
     {
         file << dataset[i] << " ";
     }
-
 
     return 0;
 }
